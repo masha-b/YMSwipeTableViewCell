@@ -25,6 +25,7 @@ static const void *YKTableDidSwipeBlockKey = &YKTableDidSwipeBlockKey;
 static const void *YKTableDidChangeModeBlockKey = &YKTableDidChangeModeBlockKey;
 static const void *YKTableWillChangeModeBlockKey = &YKTableWillChangeModeBlockKey;
 static const void *YKTableSwipeAllowMultipleKey = &YKTableSwipeAllowMultipleKey;
+static const void *YKTableSwipeContainerViewOnTopKey = &YKTableSwipeContainerViewOnTopKey;
 static const void *YKTableRightSwipeSnapThresholdKey = &YKTableRightSwipeSnapThresholdKey;
 static const void *YKTableLeftSwipeSnapThresholdKey = &YKTableLeftSwipeSnapThresholdKey;
 static const void *YKTableSwipeContainerViewBackgroundColorKey = &YKTableSwipeContainerViewBackgroundColorKey;
@@ -180,6 +181,16 @@ static const void *YKTableSwipeContainerViewBackgroundColorKey = &YKTableSwipeCo
 - (BOOL)allowMultiple
 {
     return [objc_getAssociatedObject(self, YKTableSwipeAllowMultipleKey) boolValue];
+}
+
+- (void)setSwipeContainerViewOnTop:(BOOL)swipeContainerViewOnTop
+{
+    objc_setAssociatedObject(self, YKTableSwipeContainerViewOnTopKey, @(swipeContainerViewOnTop), OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+- (BOOL)swipeContainerViewOnTop
+{
+    return [objc_getAssociatedObject(self, YKTableSwipeContainerViewOnTopKey) boolValue];
 }
 
 - (void)setRightSwipeSnapThreshold:(CGFloat)rightSwipeSnapThreshold
@@ -338,6 +349,9 @@ static const void *YKTableSwipeContainerViewBackgroundColorKey = &YKTableSwipeCo
         [self setSwipeView:snapshotView];
         snapshotView.backgroundColor = self.backgroundColor;
         [self.swipeContainerView addSubview:self.swipeView];
+        if (self.swipeContainerViewOnTop) {
+            [self.swipeContainerView sendSubviewToBack:self.swipeView];
+        }        
         if (self.allowMultiple == NO) {
             NSDictionary *userInfo = @{YMSwipeGoToDefaultModeNotificationAnimationParameter : @YES};
             [[NSNotificationCenter defaultCenter] postNotificationName:YMSwipeGoToDefaultMode object:self userInfo:userInfo];
@@ -371,6 +385,10 @@ static const void *YKTableSwipeContainerViewBackgroundColorKey = &YKTableSwipeCo
             else{
                 self.startDirection = YATableSwipeDirectionRight;
             }
+        }
+        
+        if (self.swipeView.frame.origin.x <= -self.rightView.frame.size.width) {
+            return;
         }
 
         [self.swipeView.layer setTransform:CATransform3DMakeTranslation(translation.x, 0.0, 1.0)];
