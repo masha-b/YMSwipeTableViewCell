@@ -10,6 +10,7 @@
 #import <objc/runtime.h>
 
 static const CGFloat YKTableGestureAnimationDuration = 0.3;
+static const CGFloat YKTableIncreaseToWidth = 50;
 
 static const void *YKTableGestureKey = &YKTableGestureKey;
 static const void *YKTableSwipeViewKey = &YKTableSwipeViewKey;
@@ -318,7 +319,8 @@ static const void *YKTableSwipeContainerViewBackgroundColorKey = &YKTableSwipeCo
     }
 
     void (^initializeGestureRecognizerBeginningState)(void) = ^{
-        self.contentView.clipsToBounds = YES;
+        self.contentView.clipsToBounds = NO;
+        self.contentView.contentMode = UIViewContentModeScaleToFill;
         [self.contentView addSubview:self.swipeContainerView];
         self.swipeContainerView.layer.transform = CATransform3DIdentity;
         self.swipeContainerView.frame = self.bounds;
@@ -345,6 +347,10 @@ static const void *YKTableSwipeContainerViewBackgroundColorKey = &YKTableSwipeCo
                 [self.swipeContainerView addSubview:self.leftView];
             }
         }
+        if (self.swipeContainerViewOnTop) {
+            self.contentView.frame = CGRectMake(self.contentView.frame.origin.x, self.contentView.frame.origin.y, self.contentView.frame.size.width + YKTableIncreaseToWidth, self.contentView.frame.size.height);
+        }
+        
         UIView *snapshotView = [self.contentView snapshotViewAfterScreenUpdates:NO];
         [self setSwipeView:snapshotView];
         snapshotView.backgroundColor = self.backgroundColor;
